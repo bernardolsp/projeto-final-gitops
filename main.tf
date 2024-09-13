@@ -54,11 +54,11 @@ module "this" {
 }
 
 resource "aws_secretsmanager_secret" "argocd_cluster_dev_secret" {
-  name = "argocd_cluster_dev_secret"
+  name = "argocd_cluster2_dev_secret"
 }
 
 resource "aws_secretsmanager_secret" "argocd_cluster_prod_secret" {
-  name = "argocd_cluster_prod_secret"
+  name = "argocd_cluster2_prod_secret"
 }
 
 
