@@ -33,8 +33,16 @@ module "iam_eks_role" {
   }
 
   oidc_providers = {
-    one = {
+    infra = {
       provider_arn               = module.this["infra"].oidc_provider_arn
+      namespace_service_accounts = ["crossplane:*"]
+    }
+    dev = {
+      provider_arn               = module.this["dev"].oidc_provider_arn
+      namespace_service_accounts = ["crossplane:*"]
+    }
+    prod = {
+      provider_arn               = module.this["prod"].oidc_provider_arn
       namespace_service_accounts = ["crossplane:*"]
     }
   }
@@ -52,9 +60,17 @@ module "app_role" {
   }
 
   oidc_providers = {
-    one = {
+    infra = {
       provider_arn               = module.this["infra"].oidc_provider_arn
-      namespace_service_accounts = ["default:*"]
+      namespace_service_accounts = ["python-s3-api:*"]
+    }
+    dev = {
+      provider_arn               = module.this["dev"].oidc_provider_arn
+      namespace_service_accounts = ["python-s3-api:*"]
+    }
+    prod = {
+      provider_arn               = module.this["prod"].oidc_provider_arn
+      namespace_service_accounts = ["python-s3-api:*"]
     }
   }
 }
