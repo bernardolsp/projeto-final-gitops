@@ -9,17 +9,22 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/bernardolsp/infraapps-projeto-final.git
-      revision: HEAD
+      revision: feat/ultima_aula
       directories:
       - path: "*"
   template:
     metadata:
       name: '{{index .path.segments 0}}'
+      annotations:
+        # Use a conditional statement to determine the sync wave for a specific application
+        argocd.argoproj.io/sync-wave: '{{if eq (index .path.segments 0) "crossplane-aws-resources"}}1{{else}}0{{end}}'
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
     spec:
       project: "default"
       source:
         repoURL: https://github.com/bernardolsp/infraapps-projeto-final.git
-        targetRevision: HEAD
+        targetRevision: feat/ultima_aula
         path: '{{.path.path}}'
       destination:
         server: https://kubernetes.default.svc
@@ -28,3 +33,10 @@ spec:
         automated: {}
         syncOptions:
         - CreateNamespace=true
+        - Validate=false
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            maxDuration: 3m0s
+            factor: 2
