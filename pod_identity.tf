@@ -23,33 +23,38 @@ resource "aws_eks_pod_identity_association" "infra" {
 
 ############## Crossplane ###############
 
-module "pod_identity_s3" {
-  source = "terraform-aws-modules/eks-pod-identity/aws"
+module "iam_eks_role" {
+  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  role_name = "crossplane"
 
-  name = "crossplane-s3"
-
-  attach_custom_policy      = true
-
-  policy_statements = [
-    {
-      sid       = "S3CrossplaneAccess"
-      actions   = ["s3:List*", "s3:Get*", "s3:Put*", "s3:Delete*", "s3:Create*"]
-      resources = ["*"]
-    }
-  ]
-
-  additional_policy_arns = {
-    AmazonS3FullAccess = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  assume_role_condition_test = "StringLike"
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AdministratorAccess"
   }
 
-  tags = {
-    Environment = "dev"
+  oidc_providers = {
+    one = {
+      provider_arn               = module.this["infra"].oidc_provider_arn
+      namespace_service_accounts = ["crossplane:*"]
+    }
   }
 }
 
-resource "aws_eks_pod_identity_association" "crossplane-s3" {
-  cluster_name    = module.this["infra"].cluster_name
-  namespace       = "crossplane-system"
-  service_account = "crossplane-s3"
-  role_arn        = module.pod_identity_s3.iam_role_arn
+#### app
+
+module "app_role" {
+  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  role_name = "app"
+
+  assume_role_condition_test = "StringLike"
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  }
+
+  oidc_providers = {
+    one = {
+      provider_arn               = module.this["infra"].oidc_provider_arn
+      namespace_service_accounts = ["default:*"]
+    }
+  }
 }
