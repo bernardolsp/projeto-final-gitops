@@ -1,20 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: infra-apps
+  name: infra-apps-shared
   namespace: argo
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
-  - git:
-      repoURL: https://github.com/bernardolsp/infraapps-projeto-final.git
-      revision: feat/ultima_aula
-      directories:
-      - path: "external-secrets"
+    # Use the merge generator to combine cluster and git generators
+    - matrix:
+        generators:
+          - clusters: {}
+          # Git generator
+          - git:
+              repoURL: https://github.com/bernardolsp/infraapps-projeto-final.git
+              revision: feat/ultima_aula
+              directories:
+                - path: "crossplane-aws-resources"
+                - path: "crossplane"
+
   template:
     metadata:
-      name: '{{index .path.segments 0}}'
+      name: '{{index .path.segments 0}}-{{.name}}'
       annotations:
         # Use a conditional statement to determine the sync wave for a specific application
         argocd.argoproj.io/sync-wave: '{{if eq (index .path.segments 0) "crossplane-aws-resources"}}1{{else}}0{{end}}'
@@ -27,7 +34,7 @@ spec:
         targetRevision: feat/ultima_aula
         path: '{{.path.path}}'
       destination:
-        server: https://kubernetes.default.svc
+        server: '{{.server}}'
         namespace: '{{index .path.segments 0}}'
       syncPolicy:
         automated: {}

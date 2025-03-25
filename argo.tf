@@ -16,3 +16,10 @@ resource "kubectl_manifest" "applicationset" {
     helm_release.argocd
   ]
 }
+
+resource "kubectl_manifest" "applicationset_shared" {
+  yaml_body = file("${path.module}/manifests/applicationset-cluster.yaml")
+  depends_on = [
+    helm_release.argocd
+  ]
+}
